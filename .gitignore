@@ -1,0 +1,4 @@
+references/*/samples/*
+!references/*/samples/.gitkeep
+.DS_Store
+drafts/
