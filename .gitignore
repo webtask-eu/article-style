@@ -2,3 +2,5 @@ references/*/samples/*
 !references/*/samples/.gitkeep
 .DS_Store
 drafts/
+rules.local.md
+__pycache__/

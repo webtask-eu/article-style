@@ -13,6 +13,7 @@ import sys
 
 WORD = re.compile(r"\w+(?:[-']\w+)*")
 NUMBER = re.compile(r"\d+(?:[   ]\d{3})*(?:[.,]\d+)?")
+LIST_LINE = re.compile(r"^\s*(?:\d{1,2}[.)]\s|[-*]\s)|^\s{2,}\S")
 KEYLINE = re.compile(r"^[\w-]+:|^\s+-\s|^\s*#|^\s*$")
 ABBR = re.compile(
     r"(?<!\w)(?:г|гг|т\.\s?[екдп]|др|пр|см|рис|тыс|млн|млрд|руб|ул|им|напр|англ|Mr|Mrs|Dr|vs|etc|e\.g|i\.e)\."
@@ -37,12 +38,21 @@ def sentences(par):
 
 def metrics(raw):
     text = strip_front_matter(raw.replace("\r\n", "\n")).strip()
+    text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", text)
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     text = re.sub(r"https?://\S+", "", text)
     text = re.sub(r"^(#.*)$", r"\1\n", text, flags=re.M)
-    blocks = [b.strip() for b in re.split(r"\n\s*\n", text) if b.strip()]
+    raw_blocks = [b for b in re.split(r"\n[ \t]*\n", text) if b.strip()]
+    blocks = [b.strip() for b in raw_blocks]
     heads = [b for b in blocks if b.startswith("#")]
-    paras = [b for b in blocks if not b.startswith(("#", "- ", "* ", ">", "|"))]
+    paras = []
+    for raw in raw_blocks:
+        b = raw.strip("\n")
+        if b.lstrip().startswith(("#", ">", "|")):
+            continue
+        body = "\n".join(l for l in b.split("\n") if not LIST_LINE.match(l)).strip()
+        if body and not re.fullmatch(r"[-*_]{3,}", body) and not re.fullmatch(r"\[[^\]]{0,200}\]", body):
+            paras.append(body)
     sents = [s for p in paras for s in sentences(p)]
     words = WORD.findall(text)
     swords = [len(WORD.findall(s)) for s in sents] or [0]

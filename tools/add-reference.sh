@@ -53,9 +53,17 @@ if [ ! -d "$dir" ]; then
   cp -R "$ROOT/references/_template" "$dir"
   sed -i.bak "s/^name: .*/name: $style/; s/^aliases: .*/aliases: [$style]/; s/^language: .*/language: $lang/" "$dir/style.md"
   rm -f "$dir/style.md.bak"
+  sed -i.bak "s/^style: .*/style: $style/" "$dir/rules.md"
+  rm -f "$dir/rules.md.bak"
   echo "created style: references/$style"
 fi
 mkdir -p "$dir/samples"
+if [ ! -f "$dir/rules.md" ]; then
+  cp "$ROOT/references/_template/rules.md" "$dir/rules.md"
+  sed -i.bak "s/^style: .*/style: $style/" "$dir/rules.md"
+  rm -f "$dir/rules.md.bak"
+  echo "created rules: references/$style/rules.md"
+fi
 
 base="$(clean "$title")"
 [ -n "$base" ] || { [ "$file" = "-" ] && base="sample" || base="$(clean "$(basename "$file")")"; }

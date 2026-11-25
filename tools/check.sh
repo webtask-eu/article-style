@@ -26,10 +26,17 @@ for d in vendor/*/; do
 done
 [ -f vendor/SOURCES.tsv ] || fail "vendor/SOURCES.tsv missing"
 
-for p in $(grep -oE '(vendor|tools|references)/[A-Za-z0-9_./-]*[A-Za-z0-9_]' SKILL.md | sort -u); do
+for p in $(grep -oE '(vendor|tools|references|rules)/[A-Za-z0-9_./-]*[A-Za-z0-9_]' SKILL.md | sort -u); do
   case "$p" in *'<'*) continue ;; esac
   [ -e "$p" ] || fail "SKILL.md names missing path $p"
 done
+
+python3 -I tools/rules.py check || fail "rules.py check failed"
+[ -z "$(git ls-files rules.local.md 2>/dev/null)" ] || fail "rules.local.md is tracked by git (personal file)"
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  git check-ignore -q rules.local.md || fail "rules.local.md is not ignored by git"
+  git check-ignore -q drafts/x.md || warn "drafts/ is not ignored by git"
+fi
 
 grep -q '^references/\*/samples/\*' .gitignore || warn ".gitignore does not exclude sample texts"
 if git rev-parse --git-dir >/dev/null 2>&1; then
